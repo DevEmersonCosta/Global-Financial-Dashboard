@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Markets Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">Global Markets</div>
+            <div class="controls">
+                <select class="btn" id="timeframe">
+                    <option value="1D">1 Dia</option>
+                    <option value="1W">1 Semana</option>
+                    <option value="1M">1 Mês</option>
+                    <option value="3M">3 Meses</option>
+                    <option value="1Y">1 Ano</option>
+                </select>
+                <button class="btn" id="refreshBtn">🔄 Atualizar</button>
+                <button class="btn" id="themeToggle">🌓 Tema</button>
+                <div class="loading" id="loadingSpinner" style="display: none;"></div>
+            </div>
+        </header>
+
+        <div class="grid">
+            <!-- Performance Global dos Mercados -->
+            <div class="card full-width">
+                <h3 class="card-title">🌍 Performance Global dos Mercados</h3>
+                <div class="timeframe-info" id="timeframeInfo">Período: 1 Dia</div>
+                <div class="performance-widget">
+                    <div class="performance-grid">
+                        <div class="performance-item" data-symbol="SP500">
+                            <div class="country">🇺🇸 Estados Unidos</div>
+                            <div class="index-name">S&P 500</div>
+                            <div class="performance positive" id="perf-SP500">+1.25%</div>
+                        </div>
+                        <div class="performance-item" data-symbol="NASDAQ">
+                            <div class="country">🇺🇸 Estados Unidos</div>
+                            <div class="index-name">NASDAQ</div>
+                            <div class="performance positive" id="perf-NASDAQ">+2.10%</div>
+                        </div>
+                        <div class="performance-item" data-symbol="DOW">
+                            <div class="country">🇺🇸 Estados Unidos</div>
+                            <div class="index-name">Dow Jones</div>
+                            <div class="performance positive" id="perf-DOW">+0.95%</div>
+                        </div>
+                        <div class="performance-item" data-symbol="IBOVESPA">
+                            <div class="country">🇧🇷 Brasil</div>
+                            <div class="index-name">IBOVESPA</div>
+                            <div class="performance negative" id="perf-IBOVESPA">-0.85%</div>
+                        </div>
+                        <div class="performance-item" data-symbol="FTSE100">
+                            <div class="country">🇬🇧 Reino Unido</div>
+                            <div class="index-name">FTSE 100</div>
+                            <div class="performance positive" id="perf-FTSE100">+0.45%</div>
+                        </div>
+                        <div class="performance-item" data-symbol="DAX">
+                            <div class="country">🇩🇪 Alemanha</div>
+                            <div class="index-name">DAX</div>
+                            <div class="performance positive" id="perf-DAX">+0.75%</div>
+                        </div>
+                        <div class="performance-item" data-symbol="NIKKEI">
+                            <div class="country">🇯🇵 Japão</div>
+                            <div class="index-name">Nikkei 225</div>
+                            <div class="performance negative" id="perf-NIKKEI">-1.20%</div>
+                        </div>
+                        <div class="performance-item" data-symbol="HANG_SENG">
+                            <div class="country">🇭🇰 Hong Kong</div>
+                            <div class="index-name">Hang Seng</div>
+                            <div class="performance negative" id="perf-HANG_SENG">-0.95%</div>
+                        </div>
+                        <div class="performance-item" data-symbol="CAC40">
+                            <div class="country">🇫🇷 França</div>
+                            <div class="index-name">CAC 40</div>
+                            <div class="performance positive" id="perf-CAC40">+0.32%</div>
+                        </div>
+                        <div class="performance-item" data-symbol="BOVESPA_SMALL">
+                            <div class="country">🇧🇷 Brasil</div>
+                            <div class="index-name">BOVESPA Small</div>
+                            <div class="performance positive" id="perf-BOVESPA_SMALL">+1.45%</div>
+                        </div>
+                        <div class="performance-item" data-symbol="MOEX">
+                            <div class="country">🇷🇺 Rússia</div>
+                            <div class="index-name">MOEX Russia</div>
+                            <div class="performance negative" id="perf-MOEX">-2.30%</div>
+                        </div>
+                        <div class="performance-item" data-symbol="TAIEX">
+                            <div class="country">🇹🇼 Taiwan</div>
+                            <div class="index-name">TAIEX</div>
+                            <div class="performance positive" id="perf-TAIEX">+0.85%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Principais Índices -->
+            <div class="card">
+                <h3 class="card-title">📊 S&P 500</h3>
+                <div class="market-status">
+                    <span>🇺🇸 NYSE</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="status-indicator status-open"></div>
+                        <span>Aberto</span>
+                    </div>
+                </div>
+                <div class="price" id="sp500-price">4,185.50</div>
+                <div class="change positive" id="sp500-change">+1.25% (+51.75)</div>
+                <div class="chart-container">
+                    <canvas id="sp500-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">📈 IBOVESPA</h3>
+                <div class="market-status">
+                    <span>🇧🇷 B3</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="status-indicator status-closed"></div>
+                        <span>Fechado</span>
+                    </div>
+                </div>
+                <div class="price" id="ibov-price">118,420</div>
+                <div class="change negative" id="ibov-change">-0.85% (-1,015)</div>
+                <div class="chart-container">
+                    <canvas id="ibov-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">📱 NASDAQ</h3>
+                <div class="market-status">
+                    <span>🇺🇸 NASDAQ</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="status-indicator status-open"></div>
+                        <span>Aberto</span>
+                    </div>
+                </div>
+                <div class="price" id="nasdaq-price">12,985.45</div>
+                <div class="change positive" id="nasdaq-change">+2.1% (+267.32)</div>
+                <div class="chart-container">
+                    <canvas id="nasdaq-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">🏭 Dow Jones</h3>
+                <div class="market-status">
+                    <span>🇺🇸 NYSE</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="status-indicator status-open"></div>
+                        <span>Aberto</span>
+                    </div>
+                </div>
+                <div class="price" id="dow-price">34,250.80</div>
+                <div class="change positive" id="dow-change">+0.95% (+324.50)</div>
+                <div class="chart-container">
+                    <canvas id="dow-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">🏛️ FTSE 100</h3>
+                <div class="market-status">
+                    <span>🇬🇧 LSE</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="status-indicator status-closed"></div>
+                        <span>Fechado</span>
+                    </div>
+                </div>
+                <div class="price" id="ftse-price">7,628.50</div>
+                <div class="change positive" id="ftse-change">+0.45% (+34.25)</div>
+                <div class="chart-container">
+                    <canvas id="ftse-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">🌸 Nikkei 225</h3>
+                <div class="market-status">
+                    <span>🇯🇵 TSE</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="status-indicator status-closed"></div>
+                        <span>Fechado</span>
+                    </div>
+                </div>
+                <div class="price" id="nikkei-price">33,845.90</div>
+                <div class="change negative" id="nikkei-change">-1.2% (-410.15)</div>
+                <div class="chart-container">
+                    <canvas id="nikkei-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">🚗 DAX</h3>
+                <div class="market-status">
+                    <span>🇩🇪 XETRA</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="status-indicator status-closed"></div>
+                        <span>Fechado</span>
+                    </div>
+                </div>
+                <div class="price" id="dax-price">15,962.30</div>
+                <div class="change positive" id="dax-change">+0.75% (+118.95)</div>
+                <div class="chart-container">
+                    <canvas id="dax-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">🔥 Hang Seng</h3>
+                <div class="market-status">
+                    <span>🇭🇰 HKEX</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="status-indicator status-closed"></div>
+                        <span>Fechado</span>
+                    </div>
+                </div>
+                <div class="price" id="hang_seng-price">17,485.60</div>
+                <div class="change negative" id="hang_seng-change">-0.95% (-167.20)</div>
+                <div class="chart-container">
+                    <canvas id="hang_seng-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">🥖 CAC 40</h3>
+                <div class="market-status">
+                    <span>🇫🇷 Euronext</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="status-indicator status-closed"></div>
+                        <span>Fechado</span>
+                    </div>
+                </div>
+                <div class="price" id="cac40-price">7,245.80</div>
+                <div class="change positive" id="cac40-change">+0.32% (+23.15)</div>
+                <div class="chart-container">
+                    <canvas id="cac40-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">🇧🇷 BOVESPA Small</h3>
+                <div class="market-status">
+                    <span>🇧🇷 B3</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="status-indicator status-closed"></div>
+                        <span>Fechado</span>
+                    </div>
+                </div>
+                <div class="price" id="bovespa_small-price">3,245.60</div>
+                <div class="change positive" id="bovespa_small-change">+1.45% (+46.95)</div>
+                <div class="chart-container">
+                    <canvas id="bovespa_small-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">🇷🇺 MOEX Russia</h3>
+                <div class="market-status">
+                    <span>🇷🇺 MOEX</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="status-indicator status-closed"></div>
+                        <span>Fechado</span>
+                    </div>
+                </div>
+                <div class="price" id="moex-price">2,845.30</div>
+                <div class="change negative" id="moex-change">-2.30% (-67.15)</div>
+                <div class="chart-container">
+                    <canvas id="moex-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">🇹🇼 TAIEX</h3>
+                <div class="market-status">
+                    <span>🇹🇼 TWSE</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="status-indicator status-closed"></div>
+                        <span>Fechado</span>
+                    </div>
+                </div>
+                <div class="price" id="taiex-price">17,125.80</div>
+                <div class="change positive" id="taiex-change">+0.85% (+144.25)</div>
+                <div class="chart-container">
+                    <canvas id="taiex-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Rankings e Destaques -->
+            <div class="card">
+                <h3 class="card-title">🔥 Maiores Altas do Dia</h3>
+                <div class="compact-grid">
+                    <div class="ranking-item">
+                        <span>NVDA</span>
+                        <span class="positive">+8.45%</span>
+                    </div>
+                    <div class="ranking-item">
+                        <span>TSLA</span>
+                        <span class="positive">+6.12%</span>
+                    </div>
+                    <div class="ranking-item">
+                        <span>AMD</span>
+                        <span class="positive">+5.87%</span>
+                    </div>
+                    <div class="ranking-item">
+                        <span>META</span>
+                        <span class="positive">+4.23%</span>
+                    </div>
+                    <div class="ranking-item">
+                        <span>GOOGL</span>
+                        <span class="positive">+3.95%</span>
+                    </div>
+                    <div class="ranking-item">
+                        <span>AAPL</span>
+                        <span class="positive">+3.12%</span>
+                    </div>
+                    <div class="ranking-item">
+                        <span>MSFT</span>
+                        <span class="positive">+2.87%</span>
+                    </div>
+                    <div class="ranking-item">
+                        <span>AMZN</span>
+                        <span class="positive">+2.45%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">❄️ Maiores Quedas do Dia</h3>
+                <div class="compact-grid">
+                    <div class="ranking-item">
+                        <span>NFLX</span>
+                        <span class="negative">-4.56%</span>
+                    </div>
+                    <div class="ranking-item">
+                        <span>BABA</span>
+                        <span class="negative">-3.89%</span>
+                    </div>
+                    <div class="ranking-item">
+                        <span>PYPL</span>
+                        <span class="negative">-3.12%</span>
+                    </div>
+                    <div class="ranking-item">
+                        <span>UBER</span>
+                        <span class="negative">-2.95%</span>
+                    </div>
+                    <div class="ranking-item">
+                        <span>SNAP</span>
+                        <span class="negative">-2.78%</span>
+                    </div>
+                    <div class="ranking-item">
+                        <span>TWTR</span>
+                        <span class="negative">-2.45%</span>
+                    </div>
+                    <div class="ranking-item">
+                        <span>SPOT</span>
+                        <span class="negative">-2.12%</span>
+                    </div>
+                    <div class="ranking-item">
+                        <span>ZM</span>
+                        <span class="negative">-1.98%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Moedas -->
+            <div class="card">
+                <h3 class="card-title">💱 Principais Moedas</h3>
+                <div class="compact-grid">
+                    <div class="currency-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>USD/BRL</span>
+                            <div style="text-align: right;">
+                                <div class="price">5.12</div>
+                                <div class="change positive">+0.35%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="currency-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>EUR/USD</span>
+                            <div style="text-align: right;">
+                                <div class="price">1.0875</div>
+                                <div class="change negative">-0.12%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="currency-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>GBP/USD</span>
+                            <div style="text-align: right;">
+                                <div class="price">1.2645</div>
+                                <div class="change positive">+0.28%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="currency-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>USD/JPY</span>
+                            <div style="text-align: right;">
+                                <div class="price">148.75</div>
+                                <div class="change negative">-0.45%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="currency-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>BTC/USD</span>
+                            <div style="text-align: right;">
+                                <div class="price">42,500</div>
+                                <div class="change positive">+2.15%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="currency-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>ETH/USD</span>
+                            <div style="text-align: right;">
+                                <div class="price">2,650</div>
+                                <div class="change negative">-1.25%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notícias -->
+            <div class="card">
+                <h3 class="card-title">📰 Últimas Notícias</h3>
+                <div class="compact-grid" id="news-feed">
+                    <div class="news-item">
+                        <div class="news-title">Fed mantém taxa de juros inalterada</div>
+                        <div class="news-source">Reuters • 2 horas atrás</div>
+                    </div>
+                    <div class="news-item">
+                        <div class="news-title">Tesla reporta lucros acima do esperado</div>
+                        <div class="news-source">Bloomberg • 4 horas atrás</div>
+                    </div>
+                    <div class="news-item">
+                        <div class="news-title">Petrobras anuncia novo dividendo</div>
+                        <div class="news-source">Valor • 6 horas atrás</div>
+                    </div>
+                    <div class="news-item">
+                        <div class="news-title">Mercados asiáticos fecham em queda após dados da China</div>
+                        <div class="news-source">Financial Times • 8 horas atrás</div>
+                    </div>
+                    <div class="news-item">
+                        <div class="news-title">Bitcoin atinge nova máxima histórica</div>
+                        <div class="news-source">CoinDesk • 10 horas atrás</div>
+                    </div>
+                    <div class="news-item">
+                        <div class="news-title">Banco Central do Brasil sinaliza corte de juros</div>
+                        <div class="news-source">Reuters • 12 horas atrás</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+
+</body>
+</html>
