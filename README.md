@@ -222,7 +222,7 @@ Para suporte, envie um email para emersoncurry72@gmail.com ou abra uma issue no 
 
 ### 📊 Status
 
-![GitHub last commit](https://img.shields.io/github/last-commit/seu-usuario/repo)
-![GitHub issues](https://img.shields.io/github/issues/seu-usuario/repo)
-![GitHub stars](https://img.shields.io/github/stars/seu-usuario/repo)
-![GitHub forks](https://img.shields.io/github/forks/seu-usuario/repo)
+![GitHub last commit](https://img.shields.io/github/last-commit/DevEmersonCosta/Global-Financial-Dashboard)
+![GitHub issues](https://img.shields.io/github/issues/DevEmersonCosta/Global-Financial-Dashboard)
+![GitHub stars](https://img.shields.io/github/stars/DevEmersonCosta/Global-Financial-Dashboard)
+![GitHub forks](https://img.shields.io/github/forks/DevEmersonCosta/Global-Financial-Dashboard)
